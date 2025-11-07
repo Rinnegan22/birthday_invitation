@@ -1,0 +1,289 @@
+<template>
+    <v-navigation-drawer v-model="drawer" app color="primary">
+        <v-sheet class="pa-4 d-flex flex-column align-center" color="#000020">
+            <v-avatar class="mb-4" color="blue-grey-lighten-2" size="53">
+                <v-icon
+                    icon="mdi-account"
+                    size="x-large"
+                    color="white"
+                ></v-icon>
+            </v-avatar>
+            <div class="user-name">Dazzle Ywain M. Galanida</div>
+            <div class="user-email">DazzleYwain@gmail.com</div>
+        </v-sheet>
+
+        <v-divider></v-divider>
+
+        <v-list nav v-model:opened="open">
+            <Link class="no-underline-v-list-item" href="/">
+                <v-list-item
+                    link
+                    class="sidebar-hover"
+                    :class="{ selected: page.url === '/' }"
+                    @click="router.visit('/')"
+                >
+                    <template #prepend>
+                        <v-icon
+                            icon="mdi-home"
+                            color="white"
+                            size="default"
+                        ></v-icon>
+                    </template>
+                    <v-list-item-title class="text-body-2">
+                        Home
+                    </v-list-item-title>
+                </v-list-item>
+            </Link>
+        </v-list>
+
+        <template v-slot:append>
+            <v-footer class="d-flex flex-column text-center" color="primary">
+                <div>
+                    <strong style="font-size: 0.99rem">{{ appName }}</strong>
+
+                    <br />
+                    <strong>Rinnegan ©</strong> —
+                    {{ new Date().getFullYear() }}
+                </div>
+            </v-footer>
+        </template>
+    </v-navigation-drawer>
+
+    <nav-bar
+        :hasDrawer="true"
+        :errors="errors"
+        :flash="flash"
+        :can="can"
+        @toggleDrawer="toggleDrawer"
+    />
+</template>
+
+<script setup>
+import { computed, onMounted, ref } from "vue";
+import NavBar from "./NavBar.vue";
+import { usePage, Link, router } from "@inertiajs/vue3";
+import { useDisplay } from "vuetify";
+
+const props = defineProps({
+    errors: Object,
+    flash: Object,
+    can: Array,
+});
+
+const page = usePage();
+
+const open = ref([]);
+
+const drawer = ref(false);
+
+const { mobile } = useDisplay();
+
+onMounted(() => {
+    if (!mobile.value) {
+        drawer.value = true;
+    }
+
+    const currentUrl = page.url;
+    if (currentUrl.startsWith("/supply-transfers")) {
+        open.value = ["SupplyTransfers"];
+    } else if (
+        currentUrl.startsWith("/condemneds") ||
+        currentUrl.startsWith("/condemned-consumptions")
+    ) {
+        open.value = ["Condemneds"];
+    } else if (currentUrl.startsWith("/reports")) {
+        open.value = ["Reports"];
+    } else if (
+        systemLinks.some((link) => currentUrl.includes(moduleLink(link.module)))
+    ) {
+        open.value = ["Systems"];
+    } else {
+        open.value = [];
+    }
+});
+
+const toggleDrawer = () => {
+    drawer.value = !drawer.value;
+};
+
+const appName = computed(() => {
+    return page.props.appName ?? "Birthday Invitation";
+});
+
+const fullName = computed(() => {
+    return page.props.auth.user.name ?? "Full Name";
+});
+
+const emailAddress = computed(() => {
+    return page.props.auth.user.email ?? "Email Address";
+});
+
+const profileIcon = computed(() => {
+    return page.props.auth.user.isAdmin ? "mdi-account-star" : "mdi-account";
+});
+
+const accountType = computed(() => {
+    return page.props.auth.user.type;
+});
+
+const accessibleModules = computed(() => page.props.accessibleModules ?? []);
+
+const moduleLinks = [
+    { module: "supplies", icon: "mdi-treasure-chest" },
+    { module: "incident_reports", icon: "mdi-receipt-text" },
+    { module: "supply_counts", icon: "mdi-counter" },
+];
+
+const supplyTransferLinks = [
+    { module: "Property", link: "supply-transfers/property" },
+    { module: "Location", link: "supply-transfers/location" },
+];
+
+const condemnedLinks = [
+    { module: "condemneds", icon: "mdi-delete-variant" },
+    { module: "condemned_consumptions", icon: "mdi-account-group" },
+];
+
+const reportLinks = [
+    {
+        module: "Monthly Report",
+        link: "reports/monthly-reports",
+    },
+    {
+        module: "Incident Reports",
+        link: "reports/supply-incident-reports",
+    },
+    { module: "Unaccounted Report", link: "reports/unaccounted-reports" },
+    {
+        module: "QTP Report",
+        link: "reports/quantity-to-purchase-reports",
+    },
+    // {
+    //     module: "Condemned Consumption Report",
+    //     link: "reports/condemned-stock-reports",
+    // },
+];
+
+const systemLinks = [
+    {
+        module: "profiles",
+        icon: "mdi-card-account-details-outline",
+        type: "ADMIN",
+    },
+    { module: "employees", icon: "mdi-account-tie" },
+    { module: "properties", icon: "mdi-city-variant-outline" },
+    { module: "locations", icon: "mdi-warehouse" },
+    { module: "activity_logs", icon: "mdi-archive-clock" },
+    { module: "user_groups", icon: "mdi-account-group" },
+];
+
+const moduleLink = (module) => module.replace(/_/g, "-");
+const moduleName = (module) => {
+    switch (module) {
+        case "condemneds":
+            return "Stocks";
+        case "condemned_consumptions":
+            return "Consumptions";
+        default:
+            return module
+                .replace(/_/g, "-")
+                .split("-")
+                .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(" ");
+    }
+};
+</script>
+
+<style scoped>
+.user-name,
+.user-email {
+    word-wrap: break-word;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    text-align: center;
+    max-width: 100%;
+    display: inline-block;
+    white-space: normal;
+    color: white; /* ✅ Default name/email is white */
+}
+
+/* Style for the user's name */
+.user-name {
+    font-weight: bold;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Style for the user's email */
+.user-email {
+    font-size: 0.9rem;
+}
+
+/* Smaller screens */
+@media (max-width: 600px) {
+    .user-name {
+        font-size: 0.8rem;
+    }
+    .user-email {
+        font-size: 0.8rem;
+    }
+}
+
+/* Larger screens */
+@media (min-width: 1200px) {
+    .user-name {
+        font-size: 1rem;
+    }
+    .user-email {
+        font-size: 0.9rem;
+    }
+}
+
+/* Selected state (stays active) */
+.sidebar-hover.selected {
+    background-color: #000020 !important;
+    border-radius: 6px;
+}
+.sidebar-hover.selected .v-list-item-title,
+.sidebar-hover.selected .v-icon {
+    color: white !important;
+}
+
+/* ✅ Click/press only (temporary, not staying) */
+.sidebar-hover:active {
+    background-color: #000020 !important;
+    border-radius: 6px;
+}
+.sidebar-hover:active .v-list-item-title,
+.sidebar-hover:active .v-icon {
+    color: black !important;
+}
+
+/* Hover effect */
+.sidebar-hover:hover {
+    background-color: #808080;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    border-radius: 6px;
+    cursor: pointer;
+}
+.sidebar-hover:hover .v-list-item-title,
+.sidebar-hover:hover .v-icon {
+    color: white !important;
+}
+
+/* NEW CSS for custom ripple color */
+.sidebar-hover :deep(.v-ripple__container) {
+    color: white !important;
+}
+
+/* Remove underline from Inertia's Link */
+.no-underline-v-list-item {
+    text-decoration: none !important;
+}
+
+/* ✅ Make ALL sidebar text and icons white by default */
+.no-underline-v-list-item .v-list-item-title,
+.no-underline-v-list-item .v-icon {
+    color: white !important;
+}
+</style>

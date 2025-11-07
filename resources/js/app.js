@@ -1,26 +1,30 @@
-import { createApp, h } from 'vue'
-import { createInertiaApp } from '@inertiajs/vue3'
+// import "./bootstrap"; // ✅ MUST come before anything that uses Echo
 
-// Vuetify
-import 'vuetify/styles'
-import { createVuetify } from 'vuetify'
-import * as components from 'vuetify/components'
-import * as directives from 'vuetify/directives'
+import { createApp, h } from "vue";
+import { createInertiaApp } from "@inertiajs/vue3";
+import Layout from "@/App.vue";
+import vuetify from "./vuetify";
 
-const vuetify = createVuetify({
-  components,
-  directives,
-})
+// Helper: kebab-case converter (optional, if you prefer <c-data-table-server>)
+function toKebabCase(str) {
+    return str.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
+}
 
 createInertiaApp({
-  resolve: name => {
-    const pages = import.meta.glob('./Pages/**/*.vue', { eager: true })
-    return pages[`./Pages/${name}.vue`]
-  },
-  setup({ el, App, props, plugin }) {
-    createApp({ render: () => h(App, props) })
-      .use(plugin)
-      .use(vuetify)
-      .mount(el)
-  },
-})
+    resolve: (name) => {
+        const pages = import.meta.glob("./Pages/**/*.vue", { eager: true });
+        const page = pages[`./Pages/${name}.vue`];
+
+        // only pages that has no layout defined in the component will render the layout
+        if (page.default.layout === undefined) {
+            page.default.layout = Layout;
+        }
+
+        return page;
+    },
+    setup({ el, App, props, plugin }) {
+        const app = createApp({ render: () => h(App, props) });
+
+        app.use(plugin).use(vuetify).mount(el);
+    },
+});

@@ -17,6 +17,7 @@
     },
     "dependencies": {
         "@inertiajs/vue3": "^2.2.11",
+        "@mdi/font": "^7.4.47",
         "vuetify": "^3.10.7"
     }
 }
